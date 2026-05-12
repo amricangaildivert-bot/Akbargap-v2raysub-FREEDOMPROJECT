@@ -15,38 +15,30 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download and debug external file
+      - name: Download external file
         run: |
           mkdir -p configs
-          curl -v -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt 2> curl_log.txt
-          echo "Download exit code: $?"
-          echo "File size: $(wc -c < configs/external.txt) bytes"
-          echo "First 10 lines of downloaded file:"
-          head -10 configs/external.txt
-          echo "=== Checking for vmess patterns ==="
-          grep -c "vmess://" configs/external.txt || echo "No vmess found"
-          grep -c "vless://" configs/external.txt || echo "No vless found"
+          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          echo "Downloaded $(wc -l < configs/external.txt) lines"
 
-      - name: Create final subscription file (with filtering)
+      - name: Merge all configs
         run: |
-          cat configs/*.txt > all_configs.txt
-          echo "Total lines in all_configs.txt: $(wc -l < all_configs.txt)"
-          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" all_configs.txt > sub.txt || true
-          if [ ! -s sub.txt ]; then
-            echo "Warning: No valid links found, creating placeholder"
-            echo "# No valid links found" > sub.txt
-          fi
+          cat configs/*.txt > sub.txt
+          echo "Total lines in sub.txt: $(wc -l < sub.txt)"
+
+      - name: Convert to base64
+        run: |
           base64 -w 0 sub.txt > subscribe.txt
 
       - name: Commit and push
         run: |
           git config user.name "github-actions"
-          git config.user.email "actions@github.com"
+          git config user.email "actions@github.com"
           git add subscribe.txt
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription"
+            git commit -m "Auto update subscription (no filter)"
             git pull --rebase origin main
             git push
           fi
