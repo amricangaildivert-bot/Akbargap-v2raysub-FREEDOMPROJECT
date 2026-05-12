@@ -19,18 +19,34 @@ jobs:
         run: |
           curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
           if [ ! -s configs/external.txt ]; then
-            echo "# Failed to download external sub" > configs/external.txt
+            echo ":warning: Download failed or empty" > configs/external.txt
           fi
+          echo "=== First 5 lines of external.txt ==="
+          head -5 configs/external.txt
 
       - name: Create final subscription file (with priority for your configs)
         run: |
-          cat $(ls configs/*.txt | grep -v "external.txt") > personal.txt
+          # جمع‌آوری فایل‌های شخصی (به جز external.txt)
+          shopt -s nullglob
+          personal_files=(configs/*.txt)
+          personal_files=(${personal_files[@]#configs/external.txt})
+          cat "${personal_files[@]}" > personal.txt 2>/dev/null || touch personal.txt
+          
+          # اضافه کردن فایل خارجی
           cat configs/external.txt >> personal.txt
+          
+          # فیلتر لینک‌های معتبر
           grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" personal.txt > sub.txt || true
+          
           if [ ! -s sub.txt ]; then
             echo "# No valid links found" > sub.txt
           fi
+          
           base64 -w 0 sub.txt > subscribe.txt
+          
+          echo "=== Statistics ==="
+          echo "Lines in personal.txt: $(wc -l < personal.txt)"
+          echo "Valid links in sub.txt: $(wc -l < sub.txt)"
 
       - name: Commit and push
         run: |
@@ -40,8 +56,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (jsDelivr + priority)"
+            git commit -m "Auto update subscription"
             git pull --rebase origin main
             git push
           fi
-
