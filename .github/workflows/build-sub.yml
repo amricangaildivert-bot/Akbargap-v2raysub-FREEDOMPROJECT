@@ -18,7 +18,7 @@ jobs:
       - name: Download external file
         run: |
           mkdir -p configs
-          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub2.txt" -o configs/external.txt
           echo "Downloaded $(wc -l < configs/external.txt) lines"
 
       - name: Merge all configs
