@@ -17,26 +17,19 @@ jobs:
 
       - name: Download external sub file
         run: |
-          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          curl -sL "https://cdn.jsdelivr.net/gh/barry-far/V2ray-Configs@main/Sub1.txt" -o configs/external.txt
           if [ ! -s configs/external.txt ]; then
             echo "# Failed to download external sub" > configs/external.txt
           fi
 
       - name: Create final subscription file (with priority for your configs)
         run: |
-          # ابتدا همه فایل‌های txt داخل configs را بگیر، به جز external.txt (اینها فایل‌های شخصی شما هستند)
           cat $(ls configs/*.txt | grep -v "external.txt") > personal.txt
-          
-          # سپس فایل خارجی را اضافه کن (پایین‌تر قرار می‌گیرد)
           cat configs/external.txt >> personal.txt
-          
-          # فیلتر: فقط لینک‌های معتبر
           grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" personal.txt > sub.txt || true
-          
           if [ ! -s sub.txt ]; then
             echo "# No valid links found" > sub.txt
           fi
-          
           base64 -w 0 sub.txt > subscribe.txt
 
       - name: Commit and push
@@ -47,7 +40,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (your configs first)"
+            git commit -m "Auto update subscription (jsDelivr + priority)"
             git pull --rebase origin main
             git push
           fi
