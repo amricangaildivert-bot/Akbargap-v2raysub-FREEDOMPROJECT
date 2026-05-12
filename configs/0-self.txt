@@ -1,2 +1,2 @@
-ljk jsj
+ljk jsjg
 vless://54264f14-4557-a29f-775b-0a0710447b52@127.0.0.1:40443?encryption=none&security=none&sni=185.226.94.190&type=ws&path=%2F#dP7
