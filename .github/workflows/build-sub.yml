@@ -27,7 +27,7 @@ jobs:
           # ترکیب همه فایل‌های txt داخل configs
           cat configs/*.txt > all_raw.txt
           
-          # فیلتر: فقط خطوطی که با پروتکل‌های معتبر شروع می‌شوند را نگه دار
+          #فیلتر: فقط خطوطی که با پروتکل‌های معتبر شروع می‌شوند را نگه دار
           grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" all_raw.txt > sub.txt || true
           
           # اگر خروجی خالی بود، یک پیام جایگزین بگذار تا فایل خالی نباشد
