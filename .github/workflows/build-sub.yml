@@ -15,11 +15,27 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download external file
+      - name: Download multiple external sub files
         run: |
           mkdir -p configs
-          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub2.txt" -o configs/external.txt
-          echo "Downloaded $(wc -l < configs/external.txt) lines"
+          
+          # ================================
+          # لیست لینک‌های ساب خود را اینجا وارد کنید
+          # ================================
+          urls=(
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub2.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub3.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub4.txt"
+          )
+          
+          counter=1
+          for url in "${urls[@]}"; do
+            filename="configs/external_${counter}.txt"
+            curl -sL "$url" -o "$filename"
+            echo "Downloaded $url -> $filename, lines: $(wc -l < "$filename")"
+            ((counter++))
+          done
 
       - name: Merge all configs
         run: |
@@ -38,8 +54,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (no filter)"
+            git commit -m "Auto update subscription (multiple sources)"
             git pull --rebase origin main
             git push
           fi
-# project update 
