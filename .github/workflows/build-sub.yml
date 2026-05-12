@@ -17,7 +17,7 @@ jobs:
 
       - name: Download external sub file
         run: |
-          curl -sL "https://cdn.jsdelivr.net/gh/barry-far/V2ray-Configs@main/Sub1.txt" -o configs/external.txt
+          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
           if [ ! -s configs/external.txt ]; then
             echo "# Failed to download external sub" > configs/external.txt
           fi
