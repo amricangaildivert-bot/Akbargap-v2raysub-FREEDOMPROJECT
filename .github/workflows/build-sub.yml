@@ -1,0 +1,52 @@
+name: Build Subscription
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download external sub file and save into configs folder
+        run: |
+          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          if [ ! -s configs/external.txt ]; then
+            echo "# Failed to download external sub" > configs/external.txt
+          fi
+
+      - name: Create final subscription file (with filtering)
+        run: |
+          # ترکیب همه فایل‌های txt داخل configs
+          cat configs/*.txt > all_raw.txt
+          
+          # فیلتر: فقط خطوطی که با پروتکل‌های معتبر شروع می‌شوند را نگه دار
+          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" all_raw.txt > sub.txt || true
+          
+          # اگر خروجی خالی بود، یک پیام جایگزین بگذار تا فایل خالی نباشد
+          if [ ! -s sub.txt ]; then
+            echo "# No valid links found" > sub.txt
+          fi
+          
+          # تبدیل به base64
+          base64 -w 0 sub.txt > subscribe.txt
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add subscribe.txt
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
+            git commit -m "Auto update subscription (filtered)"
+            git pull --rebase origin main
+            git push
+          fi
