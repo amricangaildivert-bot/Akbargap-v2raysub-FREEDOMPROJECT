@@ -15,27 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download external sub file and save into configs folder
+      - name: Download external sub file
         run: |
-          curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          curl -sL "https://cdn.jsdelivr.net/gh/barry-far/V2ray-Configs@main/Sub1.txt" -o configs/external.txt
           if [ ! -s configs/external.txt ]; then
             echo "# Failed to download external sub" > configs/external.txt
           fi
 
-      - name: Create final subscription file (with filtering)
+      - name: Create final subscription file (with priority for your configs)
         run: |
-          # ترکیب همه فایل‌های txt داخل configs
-          cat configs/*.txt > all_raw.txt
-          
-          # فیلتر: فقط خطوطی که با پروتکل‌های معتبر شروع می‌شوند را نگه دار
-          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" all_raw.txt > sub.txt || true
-          
-          # اگر خروجی خالی بود، یک پیام جایگزین بگذار تا فایل خالی نباشد
+          cat $(ls configs/*.txt | grep -v "external.txt") > personal.txt
+          cat configs/external.txt >> personal.txt
+          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" personal.txt > sub.txt || true
           if [ ! -s sub.txt ]; then
             echo "# No valid links found" > sub.txt
           fi
-          
-          # تبدیل به base64
           base64 -w 0 sub.txt > subscribe.txt
 
       - name: Commit and push
@@ -46,7 +40,8 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (filtered)"
+            git commit -m "Auto update subscription (jsDelivr + priority)"
             git pull --rebase origin main
             git push
           fi
+
