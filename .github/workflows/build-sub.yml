@@ -5,7 +5,7 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '*/5 * * * *'   # هر ۵ دقیقه یکبار می‌دوه (کوتاه‌ترین فاصله مجاز گیت‌هاب)
 
 jobs:
   build:
@@ -15,28 +15,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download external sub file
+      - name: Download and filter configs
         run: |
+          # 1. دانلود کانفیگ از لینک خودت
           curl -sL "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt" -o configs/external.txt
+          
+          # 2. اگه دانلود نشد، یه پیام بذار
           if [ ! -s configs/external.txt ]; then
-            echo "# Failed to download external sub" > configs/external.txt
+            echo ":warning: Failed to download external sub" > configs/external.txt
           fi
-
-      - name: Create final subscription file (with priority for your configs)
-        run: |
-          # ابتدا همه فایل‌های txt داخل configs را بگیر، به جز external.txt (اینها فایل‌های شخصی شما هستند)
-          cat $(ls configs/*.txt | grep -v "external.txt") > personal.txt
           
-          # سپس فایل خارجی را اضافه کن (پایین‌تر قرار می‌گیرد)
-          cat configs/external.txt >> personal.txt
+          # 3. همه فایلای کانفیگ رو جمع کن
+          # (هر فایل .txt توی پوشه configs - اگه فایل خودت رو هم بذاری، باهاش قاطی میشه)
+          cat configs/*.txt > all_configs.txt
           
-          # فیلتر: فقط لینک‌های معتبر
-          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" personal.txt > sub.txt || true
+          # 4. فقط خطایی رو نگه دار که با این پروتکل‌ها شروع بشن (بقیه متنای اضافه حذف میشن)
+          grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" all_configs.txt > sub.txt || true
           
+          # 5. اگه هیچ لینک معتبری نبود، یه پیام بذار که فایل خالی نمونه
           if [ ! -s sub.txt ]; then
             echo "# No valid links found" > sub.txt
           fi
           
+          # 6. تبدیل به فرمت base64 (فرمتی که ویتوری و بقیه کلاینتا می‌فهمن)
           base64 -w 0 sub.txt > subscribe.txt
 
       - name: Commit and push
@@ -44,10 +45,11 @@ jobs:
           git config user.name "github-actions"
           git config user.email "actions@github.com"
           git add subscribe.txt
+          # اگه تغییری نکرده بود، کلاً کامیت نکن
           if git diff --cached --quiet; then
-            echo "No changes"
+            echo "No changes to commit"
           else
-            git commit -m "Auto update subscription (your configs first)"
+            git commit -m "Auto update subscription"
             git pull --rebase origin main
             git push
           fi
