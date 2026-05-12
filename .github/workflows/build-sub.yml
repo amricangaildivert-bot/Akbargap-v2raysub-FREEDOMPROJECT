@@ -23,10 +23,10 @@ jobs:
           # لیست لینک‌های ساب خود را اینجا وارد کنید
           # ================================
           urls=(
-            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt"
-            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub2.txt"
-            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub3.txt"
-            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub4.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
           )
           
           counter=1
