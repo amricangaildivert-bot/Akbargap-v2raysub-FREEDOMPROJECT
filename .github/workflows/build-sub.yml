@@ -19,9 +19,6 @@ jobs:
         run: |
           mkdir -p configs
           
-          # ================================
-          # لیست لینک‌های ساب خود را اینجا وارد کنید
-          # ================================
           urls=(
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
@@ -37,15 +34,42 @@ jobs:
             ((counter++))
           done
 
-      - name: Merge all configs
+      - name: Merge all configs (sort by latest commit first)
         run: |
-          # مرتب‌سازی فایل‌ها بر اساس زمان آخرین تغییر (قدیمی‌ترین اول) - همان ترتیب کامیت
-          files=$(ls -t configs/*.txt 2>/dev/null)
-          if [ -z "$files" ]; then
-            touch sub.txt
-          else
-            cat $files > sub.txt
+          # پاک کردن فایل قبلی
+          > sub.txt
+          
+          # فایل‌های شخصی (به جز external_*)
+          personal_files=()
+          for f in configs/*.txt; do
+            if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
+              personal_files+=("$f")
+            fi
+          done
+          
+          if [ ${#personal_files[@]} -gt 0 ]; then
+            # مرتب‌سازی بر اساس آخرین زمان کامیت (جدیدترین اول)
+            for f in "${personal_files[@]}"; do
+              ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo 0)
+              echo "$ts|$f"
+            done | sort -t'|' -k1 -rn | cut -d'|' -f2 > sorted_personal.txt
+            
+            while IFS= read -r file; do
+              cat "$file" >> sub.txt
+            done < sorted_personal.txt
           fi
+          
+          # اضافه کردن فایل‌های خارجی (بدون ترتیب خاص)
+          for f in configs/external_*.txt; do
+            if [ -f "$f" ]; then
+              cat "$f" >> sub.txt
+            fi
+          done
+          
+          if [ ! -s sub.txt ]; then
+            touch sub.txt
+          fi
+          
           echo "Total lines in sub.txt: $(wc -l < sub.txt)"
 
       - name: Convert to base64
