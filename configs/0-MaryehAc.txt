@@ -1,3 +1,4 @@
+vless://0db80e5e-186c-4774-b43c-71f2745f74d3@f.kelimanjaro.ir:8880?path=%2Ffghj&security=&encryption=none&type=ws#%F0%9F%8C%AC-6272727961_aba0c3e9-10.00MB%F0%9F%93%8A-8D%E2%8F%B3
 socks://Og@1111:443#%D9%85%D8%A7%D8%B1%DB%8C%D9%87
 vless://0db80e5e-186c-4774-b43c-71f2745f74d3@f.kelimanjaro.ir:8880?path=%2Ffghj&security=&encryption=none&type=ws#%F0%9F%8C%AC-6272727961_aba0c3e9-10.00MB%F0%9F%93%8A-8D%E2%8F%B3
 vless://ff659b37-3542-44f2-ba6d-1a1dfc8af6de@ursa.pardazwe.ir:2052?path=%2F&security=none&encryption=none&type=ws#%40FIIN_VPN
