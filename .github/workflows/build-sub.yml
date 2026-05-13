@@ -39,7 +39,13 @@ jobs:
 
       - name: Merge all configs
         run: |
-          cat configs/*.txt > sub.txt
+          # مرتب‌سازی فایل‌ها بر اساس زمان آخرین تغییر (قدیمی‌ترین اول) - همان ترتیب کامیت
+          files=$(ls -tr configs/*.txt 2>/dev/null)
+          if [ -z "$files" ]; then
+            touch sub.txt
+          else
+            cat $files > sub.txt
+          fi
           echo "Total lines in sub.txt: $(wc -l < sub.txt)"
 
       - name: Convert to base64
