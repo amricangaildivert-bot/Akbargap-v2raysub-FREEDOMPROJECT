@@ -52,7 +52,7 @@ jobs:
             for f in "${personal_files[@]}"; do
               ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo 0)
               echo "$ts|$f"
-            done | sort -t'|' -k1 -rn | cut -d'|' -f2 > sorted_personal.txt
+            done | sort -t'|' -k1 -n | cut -d'|' -f2 > sorted_personal.txt
             
             while IFS= read -r file; do
               cat "$file" >> sub.txt
