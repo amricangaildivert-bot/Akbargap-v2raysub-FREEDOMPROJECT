@@ -1,3 +1,4 @@
+vless://294e88c5-7526-47fb-b572-fe6a6376ba0d@zir.alihapps3.aghanami.ir:80?type=ws&encryption=none&path=%2F&host=&security=none#@RezZonez
 ترکیبی وصل :
 
 socks://Og@proxyanonymous1.pahlavi.dpdns.org:1080#saministamm
