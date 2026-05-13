@@ -40,7 +40,7 @@ jobs:
       - name: Merge all configs
         run: |
           # مرتب‌سازی فایل‌ها بر اساس زمان آخرین تغییر (قدیمی‌ترین اول) - همان ترتیب کامیت
-          files=$(ls -tr configs/*.txt 2>/dev/null)
+          files=$(ls -t configs/*.txt 2>/dev/null)
           if [ -z "$files" ]; then
             touch sub.txt
           else
