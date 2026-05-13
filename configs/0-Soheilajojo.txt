@@ -1,3 +1,4 @@
+socks://Og@deyddu:443#%D8%AC%D9%88%D8%AC%D9%88
 ALI🧩:
 [V2ray + Psiphon⚡]:
 trojan://humanity@8.6.112.0:443?path=%2Fassignment&security=tls&insecure=0&host=www.multiplydose.com&type=ws&allowInsecure=0&sni=www.multiplydose.com#%E2%9C%85%EF%B8%8F%40Shomarrreh
