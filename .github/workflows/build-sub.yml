@@ -14,18 +14,18 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # کل تاریخچه را دریافت کن
 
       - name: Download multiple external sub files
         run: |
           mkdir -p configs
-          
           urls=(
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
           )
-          
           counter=1
           for url in "${urls[@]}"; do
             filename="configs/external_${counter}.txt"
@@ -34,12 +34,14 @@ jobs:
             ((counter++))
           done
 
-      - name: Merge all configs (sort by latest commit first)
+      - name: Merge all configs (sort by latest commit of each file)
         run: |
-          # پاک کردن فایل قبلی
+          echo "=== DEBUG: List all files in configs before sorting ==="
+          ls -la configs/
+          echo ""
+          
           > sub.txt
           
-          # فایل‌های شخصی (به جز external_*)
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -47,30 +49,46 @@ jobs:
             fi
           done
           
-          if [ ${#personal_files[@]} -gt 0 ]; then
-            # مرتب‌سازی بر اساس آخرین زمان کامیت (جدیدترین اول)
+          if [ ${#personal_files[@]} -eq 0 ]; then
+            echo "No personal files found."
+          else
+            echo "=== Getting last commit timestamp for each personal file ==="
+            tmp_file=$(mktemp)
             for f in "${personal_files[@]}"; do
-              ts=$(git log -1 --format=%ct -- "$f" 2>/dev/null || echo 0)
+              ts=$(git log -1 --format='%ct' -- "$f" 2>/dev/null || echo 0)
               echo "$ts|$f"
-            done | sort -t'|' -k1 -n | cut -d'|' -f2 > sorted_personal.txt
+              echo "$ts|$f" >> "$tmp_file"
+            done
+            echo ""
             
+            echo "=== Sorted by timestamp (newest first) ==="
+            sort -t'|' -k1 -rn "$tmp_file" | while IFS='|' read -r ts file; do
+              date_str=$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "unknown")
+              echo "$ts -> $file ($date_str)"
+            done
+            echo ""
+            
+            echo "=== Adding personal files in sorted order ==="
+            sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_files.txt
             while IFS= read -r file; do
+              echo "  Adding $file"
               cat "$file" >> sub.txt
-            done < sorted_personal.txt
+            done < sorted_files.txt
           fi
           
-          # اضافه کردن فایل‌های خارجی (بدون ترتیب خاص)
+          echo "=== Adding external files ==="
           for f in configs/external_*.txt; do
             if [ -f "$f" ]; then
+              echo "  Adding $f"
               cat "$f" >> sub.txt
             fi
           done
           
           if [ ! -s sub.txt ]; then
-            touch sub.txt
+            echo "# No configs found" > sub.txt
           fi
           
-          echo "Total lines in sub.txt: $(wc -l < sub.txt)"
+          echo "=== Total lines in sub.txt: $(wc -l < sub.txt) ==="
 
       - name: Convert to base64
         run: |
@@ -84,7 +102,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (multiple sources)"
+            git commit -m "Auto update subscription (sorted by commit time)"
             git pull --rebase origin main
             git push
           fi
