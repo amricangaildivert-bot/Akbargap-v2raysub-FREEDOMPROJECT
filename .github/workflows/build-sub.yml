@@ -1,50 +1,39 @@
-name: Build Subscription
+name: Update Subscription
 
 on:
-  push:
-    branches: [ "main" ]
-  workflow_dispatch:
   schedule:
-    - cron: '*/5 * * * *'
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
 
 jobs:
-  build:
+  update:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # کل تاریخچه را دریافت کن
+          fetch-depth: 0
 
       - name: Download multiple external sub files
         run: |
           mkdir -p configs
-          
-          mapfile -t urls < <(grep -oE 'https?://[^"]+' cleaned_sub_links.txt)
-          
+          urls=(
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
+          )
           counter=1
           for url in "${urls[@]}"; do
             filename="configs/external_${counter}.txt"
-            
-            curl -sL --fail "$url" -o "$filename" || {
-              echo "Failed to download: $url"
-              continue
-            }
-            
+            curl -sL "$url" -o "$filename"
             echo "Downloaded $url -> $filename, lines: $(wc -l < "$filename")"
             ((counter++))
           done
-        
 
-      - name: Merge all configs (sort by latest commit of each file)
+      - name: Merge all configs
         run: |
-          echo "=== DEBUG: List all files in configs before sorting ==="
           ls -la configs/
-          echo ""
-          
           > sub.txt
-          
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -52,106 +41,39 @@ jobs:
             fi
           done
           
-          if [ ${#personal_files[@]} -eq 0 ]; then
-            echo "No personal files found."
-          else
-            echo "=== Getting last commit timestamp for each personal file ==="
+          if [ ${#personal_files[@]} -gt 0 ]; then
             tmp_file=$(mktemp)
             for f in "${personal_files[@]}"; do
               ts=$(git log -1 --format='%ct' -- "$f" 2>/dev/null || echo 0)
-              echo "$ts|$f"
               echo "$ts|$f" >> "$tmp_file"
             done
-            echo ""
-            
-            echo "=== Sorted by timestamp (newest first) ==="
-            sort -t'|' -k1 -rn "$tmp_file" | while IFS='|' read -r ts file; do
-              date_str=$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "unknown")
-              echo "$ts -> $file ($date_str)"
-            done
-            echo ""
-            
-            echo "=== Adding personal files in sorted order ==="
             sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_files.txt
             while IFS= read -r file; do
-              echo "  Adding $file"
               cat "$file" >> sub.txt
             done < sorted_files.txt
           fi
           
-          echo "=== Adding external files ==="
           for f in configs/external_*.txt; do
             if [ -f "$f" ]; then
-              echo "  Adding $f"
               cat "$f" >> sub.txt
             fi
           done
           
-          # ============================================
-          # مرحله 1: حذف خطوط تکراری و خالی (بهینه‌سازی اولیه)
-          # ============================================
-          echo "=== Removing duplicate and empty lines ==="
-          sort -u sub.txt | grep -v '^$' > sub_unique.txt
-          mv sub_unique.txt sub.txt
-          
-          # ============================================
-          # مرحله 2: فیلتر کردن فقط لینک‌های معتبر کانفیگ
-          # ============================================
-          echo "=== Filtering valid config links only ==="
-          grep -E '^(vless://|vmess://|ss://|trojan://|ssr://)' sub.txt > sub_valid.txt
-          
-          if [ ! -s sub_valid.txt ]; then
-            echo "ERROR: No valid configs found! Check your sources." >&2
-            echo "# No valid configs found" > sub.txt
-          else
-            mv sub_valid.txt sub.txt
-            echo "Valid configs found: $(wc -l < sub.txt)"
-          fi
-          
-          # ============================================
-          # مرحله 3: محدود کردن تعداد خطوط (مناسب برای کلاینت موبایل)
-          # ============================================
-          # تعداد مورد نظر خود را اینجا تغییر دهید (پیش‌فرض 200)
-          MAX_LINES=200
-          
-          echo "=== Limiting to $MAX_LINES lines (for mobile client compatibility) ==="
-          TOTAL_LINES=$(wc -l < sub.txt)
-          
-          if [ $TOTAL_LINES -gt $MAX_LINES ]; then
-            echo "Original lines: $TOTAL_LINES"
-            head -n $MAX_LINES sub.txt > sub_limited.txt
-            mv sub_limited.txt sub.txt
-            echo "Reduced to $MAX_LINES lines (removed $((TOTAL_LINES - MAX_LINES)) lines)"
-          else
-            echo "Lines ($TOTAL_LINES) are within limit, no truncation needed"
-          fi
-          
-          # ============================================
-          # مرحله 4: بررسی نهایی
-          # ============================================
           if [ ! -s sub.txt ]; then
             echo "# No configs found" > sub.txt
           fi
-          
-          echo "=== Final lines in sub.txt: $(wc -l < sub.txt) ==="
-          echo "=== Final file size: $(du -h sub.txt | cut -f1) ==="
 
       - name: Convert to base64
-        run: |
-          base64 -w 0 sub.txt > subscribe.txt
-          
-          # نمایش حجم نهایی فایل base64 شده
-          echo "=== subscribe.txt size: $(du -h subscribe.txt | cut -f1) ==="
+        run: base64 -w 0 sub.txt > subscribe.txt
 
       - name: Commit and push
         run: |
           git config user.name "github-actions"
-          git config.user.email "actions@github.com"
+          git config user.email "actions@github.com"
           git add subscribe.txt
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (filtered valid configs + limited to 200 lines)"
-            git pull --rebase origin main
+            git commit -m "Auto update subscription"
             git push
           fi
