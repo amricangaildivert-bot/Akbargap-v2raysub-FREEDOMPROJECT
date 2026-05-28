@@ -98,7 +98,7 @@ jobs:
           # مرحله 2: محدود کردن تعداد خطوط (مناسب برای کلاینت موبایل)
           # ============================================
           # تعداد مورد نظر خود را اینجا تغییر دهید (پیش‌فرض 200)
-          MAX_LINES=15000
+          MAX_LINES=2000
           
           echo "=== Limiting to $MAX_LINES lines (for mobile client compatibility) ==="
           TOTAL_LINES=$(wc -l < sub.txt)
