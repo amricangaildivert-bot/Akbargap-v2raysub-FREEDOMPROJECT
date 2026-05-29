@@ -1,4 +1,4 @@
-name: Build Subscription2
+name: Build Subscription
 
 on:
   push:
