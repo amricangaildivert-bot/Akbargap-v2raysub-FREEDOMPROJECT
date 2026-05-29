@@ -15,7 +15,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # کل تاریخچه را دریافت کن
+          fetch-depth: 0
 
       - name: Download multiple external sub files
         run: |
@@ -31,11 +31,18 @@ jobs:
           for url in "${urls[@]}"; do
             filename="configs/external_${counter}.txt"
             curl -sL "$url" -o "$filename"
-            echo "Downloaded $url -> $filename, lines: $(wc -l < "$filename")"
+            lines=$(wc -l < "$filename")
+            echo "Downloaded $url -> $filename, lines: $lines"
+            
+            # دیباگ: نمایش 3 خط اول هر فایل دانلودی
+            echo "--- First 3 lines of $filename ---"
+            head -3 "$filename"
+            echo "---"
+            
             ((counter++))
           done
 
-      - name: Merge all configs (sort by latest commit of each file)
+      - name: Merge all configs (sort by latest commit + filter valid links)
         run: |
           echo "=== DEBUG: List all files in configs before sorting ==="
           ls -la configs/
@@ -43,6 +50,9 @@ jobs:
           
           > sub.txt
           
+          # ========================
+          # فایل‌های شخصی (با اولویت زمان کامیت)
+          # ========================
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -50,9 +60,7 @@ jobs:
             fi
           done
           
-          if [ ${#personal_files[@]} -eq 0 ]; then
-            echo "No personal files found."
-          else
+          if [ ${#personal_files[@]} -gt 0 ]; then
             echo "=== Getting last commit timestamp for each personal file ==="
             tmp_file=$(mktemp)
             for f in "${personal_files[@]}"; do
@@ -69,27 +77,32 @@ jobs:
             done
             echo ""
             
-            echo "=== Adding personal files in sorted order ==="
+            echo "=== Adding personal files (filtered) ==="
             sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_files.txt
             while IFS= read -r file; do
-              echo "  Adding $file"
-              cat "$file" >> sub.txt
+              echo "  Processing $file"
+              # فیلتر: فقط لینک‌های معتبر را بگیر
+              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$file" >> sub.txt || echo "    No valid links in $file"
             done < sorted_files.txt
           fi
           
-          echo "=== Adding external files ==="
+          # ========================
+          # فایل‌های خارجی (با فیلتر)
+          # ========================
+          echo "=== Adding external files (filtered) ==="
           for f in configs/external_*.txt; do
             if [ -f "$f" ]; then
-              echo "  Adding $f"
-              cat "$f" >> sub.txt
+              echo "  Processing $f"
+              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$f" >> sub.txt || echo "    No valid links in $f"
             fi
           done
           
+          # اگر همه چیز خالی بود
           if [ ! -s sub.txt ]; then
-            echo "# No configs found" > sub.txt
+            echo "# No valid configs found" > sub.txt
           fi
           
-          echo "=== Total lines in sub.txt: $(wc -l < sub.txt) ==="
+          echo "=== Total valid lines in sub.txt: $(wc -l < sub.txt) ==="
 
       - name: Convert to base64
         run: |
@@ -103,7 +116,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes"
           else
-            git commit -m "Auto update subscription (sorted by commit time)"
+            git commit -m "Auto update subscription (filtered + sorted)"
             git pull --rebase origin main
             git push
           fi
