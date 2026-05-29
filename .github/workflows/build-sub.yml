@@ -60,11 +60,19 @@ jobs:
           base64 -w 0 sub.txt > subscribe.txt
           date +"%Y-%m-%d %H:%M:%S UTC" > .last_update
 
-      - name: Commit and push
+      - name: Commit and push (forced)
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git add subscribe.txt .last_update
-          git commit -m "Auto update subscription ($(date +'%H:%M:%S'))" || echo "No changes"
-          git pull --rebase origin main
-          git push
+          
+          # حذف اجباری فایل قبلی از track
+          git rm --cached subscribe.txt .last_update 2>/dev/null || true
+          
+          # اضافه کردن دوباره
+          git add subscribe.txt .last_update --force
+          
+          # کامیت اجباری
+          git commit -m "Update subscription $(date +'%Y-%m-%d %H:%M:%S')" || echo "Nothing to commit"
+          
+          git pull --rebase origin main --no-edit || true
+          git push --force-with-lease
