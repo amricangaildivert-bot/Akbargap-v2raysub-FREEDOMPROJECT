@@ -1,4 +1,4 @@
-name: Update Subscriptionn
+name: Amirmahdihakerrrrr-freedom2
 
 on:
   schedule:
@@ -17,7 +17,7 @@ jobs:
         run: |
           mkdir -p configs
           urls=(
-            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Sub1.txt"
+            "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
             "https://raw.githubusercontent.com/barry-far/V2ray-config/main/Subx.txt"
