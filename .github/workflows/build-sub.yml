@@ -62,14 +62,17 @@ jobs:
             ((counter++))
           done
 
-      - name: Merge all configs (sort by latest commit of each file)
+      - name: Merge all configs (personal unlimited, sorted by commit time)
         run: |
-          echo "=== DEBUG: List all files in configs before sorting ==="
+          echo "=== DEBUG: List all files in configs ==="
           ls -la configs/
           echo ""
           
           > sub.txt
           
+          # ============================================
+          # 1. فایل‌های شخصی (غیر external)
+          # ============================================
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -80,14 +83,12 @@ jobs:
           if [ ${#personal_files[@]} -eq 0 ]; then
             echo "No personal files found."
           else
-            echo "=== Getting last commit timestamp for each personal file ==="
+            echo "=== Getting last commit timestamp for personal files ==="
             tmp_file=$(mktemp)
             for f in "${personal_files[@]}"; do
               ts=$(git log -1 --format='%ct' -- "$f" 2>/dev/null || echo 0)
-              echo "$ts|$f"
               echo "$ts|$f" >> "$tmp_file"
             done
-            echo ""
             
             echo "=== Sorted by timestamp (newest first) ==="
             sort -t'|' -k1 -rn "$tmp_file" | while IFS='|' read -r ts file; do
@@ -96,36 +97,44 @@ jobs:
             done
             echo ""
             
-            echo "=== Adding personal files in sorted order ==="
-            sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_files.txt
+            echo "=== Adding personal files in sorted order (all, unlimited) ==="
+            sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_personal.txt
             while IFS= read -r file; do
               echo "  Adding $file"
-              cat "$file" >> sub.txt
-            done < sorted_files.txt
+              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$file" >> sub.txt 2>/dev/null || true
+            done < sorted_personal.txt
           fi
           
-          echo "=== Adding external files ==="
+          # ============================================
+          # 2. فایل‌های خارجی (با محدودیت)
+          # ============================================
+          echo "=== Collecting external configs ==="
+          > external_all.txt
           for f in configs/external_*.txt; do
             if [ -f "$f" ]; then
-              echo "  Adding $f"
-              cat "$f" >> sub.txt
+              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$f" >> external_all.txt 2>/dev/null || true
             fi
           done
           
-          # === محدودیت 200 خط تصادفی (در صورت وجود بیش از 200 خط) ===
-          total_lines=$(wc -l < sub.txt)
-          if [ "$total_lines" -gt "$MAX_LINES" ]; then
-            echo "Total lines ($total_lines) is more than $MAX_LINES. Selecting $MAX_LINES random lines."
-            shuf sub.txt | head -n "$MAX_LINES" > sub_temp.txt && mv sub_temp.txt sub.txt
+          ext_total=$(wc -l < external_all.txt)
+          echo "Total external valid lines: $ext_total"
+          
+          if [ "$ext_total" -gt "$MAX_EXTERNAL" ]; then
+            echo "Limiting external configs to $MAX_EXTERNAL random lines."
+            shuf external_all.txt | head -n "$MAX_EXTERNAL" >> sub.txt
           else
-            echo "Total lines ($total_lines) is $MAX_LINES or less, no shuffling needed."
+            echo "Adding all external configs (no limit needed)."
+            cat external_all.txt >> sub.txt
           fi
           
+          # ============================================
+          # 3. نهایی سازی
+          # ============================================
           if [ ! -s sub.txt ]; then
             echo "# No configs found" > sub.txt
           fi
           
-          echo "=== Final lines in sub.txt: $(wc -l < sub.txt) ==="
+          echo "=== Final total lines in sub.txt: $(wc -l < sub.txt) ==="
 
       - name: Convert to base64
         run: |
