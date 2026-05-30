@@ -6,7 +6,8 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '*/10 * * * *'
-
+env:
+  MAX_LINES: 200
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -15,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # کل تاریخچه را دریافت کن
+          fetch-depth: 0
 
       - name: Download multiple external sub files
         run: |
@@ -111,11 +112,20 @@ jobs:
             fi
           done
           
+          # === محدودیت 200 خط تصادفی (در صورت وجود بیش از 200 خط) ===
+          total_lines=$(wc -l < sub.txt)
+          if [ "$total_lines" -gt "$MAX_LINES" ]; then
+            echo "Total lines ($total_lines) is more than $MAX_LINES. Selecting $MAX_LINES random lines."
+            shuf sub.txt | head -n "$MAX_LINES" > sub_temp.txt && mv sub_temp.txt sub.txt
+          else
+            echo "Total lines ($total_lines) is $MAX_LINES or less, no shuffling needed."
+          fi
+          
           if [ ! -s sub.txt ]; then
             echo "# No configs found" > sub.txt
           fi
           
-          echo "=== Total lines in sub.txt: $(wc -l < sub.txt) ==="
+          echo "=== Final lines in sub.txt: $(wc -l < sub.txt) ==="
 
       - name: Convert to base64
         run: |
