@@ -5,9 +5,8 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
+# دیگر نیازی به MAX_EXTERNAL نیست، زیرا xray-knife خروجی را مستقیماً محدود می‌کند.
 
-env:
-  MAX_EXTERNAL: 2500
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,6 +17,19 @@ jobs:
         with:
           fetch-depth: 0
 
+      # ============================================
+      # مرحله 1: نصب ابزار تست xray-knife
+      # ============================================
+      - name: Setup xray-knife
+        run: |
+          wget -q https://github.com/lilendian0x00/xray-knife/releases/latest/download/Xray-knife-linux-64.zip
+          unzip -q -o Xray-knife-linux-64.zip -d xray-knife
+          chmod +x xray-knife/xray-knife
+          sudo mv xray-knife/xray-knife /usr/local/bin/
+
+      # ============================================
+      # مرحله 2: دانلود فایل‌های خارجی
+      # ============================================
       - name: Download multiple external sub files
         run: |
           mkdir -p configs
@@ -144,17 +156,47 @@ jobs:
             ((counter++))
           done
 
-      - name: Merge all configs (personal unlimited, sorted by commit time)
+      # ============================================
+      # مرحله 3: جمع‌آوری، تست و انتخاب 2500 کانفیگ برتر خارجی
+      # ============================================
+      - name: Collect, test and select best external configs
         run: |
-          echo "=== DEBUG: List all files in configs ==="
-          ls -la configs/
-          echo ""
+          # جمع‌آوری تمام کانفیگ‌های خارجی (بدون فیلتر پروتکل)
+          > external_all.txt
+          for f in configs/external_*.txt; do
+            if [ -f "$f" ]; then
+              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$f" >> external_all.txt 2>/dev/null || true
+            fi
+          done
           
+          total_ext=$(wc -l < external_all.txt)
+          echo "📊 Total external configs collected: $total_ext"
+          
+          if [ "$total_ext" -eq 0 ]; then
+            echo "⚠️ No external configs found. Creating empty file."
+            touch external_best.txt
+          else
+            echo "🔄 Testing and selecting the best 2500 configs (by latency) using xray-knife..."
+            # تست واقعی، فیلتر بر اساس حداکثر تاخیر 1000ms، مرتب‌سازی بر اساس کمترین تاخیر، و خروجی حداکثر 2500 کانفیگ برتر
+            xray-knife speed -f external_all.txt \
+              --test-only \
+              --max-latency 1000 \
+              --sort-by latency \
+              --limit 2500 \
+              --format plain > external_best.txt 2>/dev/null
+              
+            selected=$(wc -l < external_best.txt)
+            echo "✅ Best $selected external configs selected (sorted by latency, max 2500)"
+          fi
+
+      # ============================================
+      # مرحله 4: ترکیب کانفیگ‌های شخصی (مرتب شده بر اساس زمان کامیت) + بهترین کانفیگ‌های خارجی
+      # ============================================
+      - name: Merge personal configs (unlimited, sorted) and best external configs
+        run: |
           > sub.txt
           
-          # ============================================
-          # 1. فایل‌های شخصی (غیر external)
-          # ============================================
+          # ---------- بخش شخصی (غیر external) ----------
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -187,53 +229,39 @@ jobs:
             done < sorted_personal.txt
           fi
           
-          # ============================================
-          # 2. فایل‌های خارجی (با محدودیت)
-          # ============================================
-          echo "=== Collecting external configs ==="
-          > external_all.txt
-          for f in configs/external_*.txt; do
-            if [ -f "$f" ]; then
-              grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$f" >> external_all.txt 2>/dev/null || true
-            fi
-          done
-          
-          ext_total=$(wc -l < external_all.txt)
-          echo "Total external valid lines: $ext_total"
-          
-          if [ "$ext_total" -gt "$MAX_EXTERNAL" ]; then
-            echo "Limiting external configs to $MAX_EXTERNAL random lines."
-            shuf external_all.txt | head -n "$MAX_EXTERNAL" >> sub.txt
+          # ---------- اضافه کردن بهترین کانفیگ‌های خارجی ----------
+          if [ -s external_best.txt ]; then
+            echo "=== Adding best external configs (tested & filtered) ==="
+            cat external_best.txt >> sub.txt
+            echo "✅ Added $(wc -l < external_best.txt) best external configs"
           else
-            echo "Adding all external configs (no limit needed)."
-            cat external_all.txt >> sub.txt
+            echo "⚠️ No external best configs to add."
           fi
           
-          # ============================================
-          # 3. نهایی سازی
-          # ============================================
+          # ---------- نهایی سازی ----------
           if [ ! -s sub.txt ]; then
             echo "# No configs found" > sub.txt
           fi
           
           echo "=== Final total lines in sub.txt: $(wc -l < sub.txt) ==="
 
+      # ============================================
+      # مرحله 5: تبدیل به base64 و commit
+      # ============================================
       - name: Convert to base64
         run: |
           base64 -w 0 sub.txt > subscribe.txt
 
-      - name: Commit and push (FIXED - no error on first run)
+      - name: Commit and push
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
     
-          # ساخت subscribe.txt
           base64 -w 0 sub.txt > subscribe.txt
           echo "$(date +'%Y-%m-%d %H:%M:%S UTC') - Cron triggered" > .timestamp
         
           git add -f subscribe.txt .timestamp
           
-          # بررسی تغییرات و commit در صورت نیاز
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
