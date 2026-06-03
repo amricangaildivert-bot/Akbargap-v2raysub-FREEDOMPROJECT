@@ -5,8 +5,6 @@ on:
     branches: [ "main" ]
   workflow_dispatch:
 
-# دیگر نیازی به MAX_EXTERNAL نیست، زیرا xray-knife خروجی را مستقیماً محدود می‌کند.
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -18,7 +16,7 @@ jobs:
           fetch-depth: 0
 
       # ============================================
-      # مرحله 1: نصب ابزار تست xray-knife
+      # مرحله 1: نصب ابزار xray-knife
       # ============================================
       - name: Setup xray-knife
         run: |
@@ -26,9 +24,10 @@ jobs:
           unzip -q -o Xray-knife-linux-64.zip -d xray-knife
           chmod +x xray-knife/xray-knife
           sudo mv xray-knife/xray-knife /usr/local/bin/
+          xray-knife --version || echo "xray-knife installed"
 
       # ============================================
-      # مرحله 2: دانلود فایل‌های خارجی
+      # مرحله 2: دانلود تمام فایل‌های خارجی (ساب لینک‌ها)
       # ============================================
       - name: Download multiple external sub files
         run: |
@@ -157,11 +156,12 @@ jobs:
           done
 
       # ============================================
-      # مرحله 3: جمع‌آوری، تست و انتخاب 2500 کانفیگ برتر خارجی
+      # مرحله 3: جمع‌آوری، تست و انتخاب بهترین کانفیگ‌های خارجی
+      # (با fallback به shuf در صورت خطای xray-knife)
       # ============================================
       - name: Collect, test and select best external configs
         run: |
-          # جمع‌آوری تمام کانفیگ‌های خارجی (بدون فیلتر پروتکل)
+          # جمع‌آوری همه لینک‌های معتبر از فایل‌های external_
           > external_all.txt
           for f in configs/external_*.txt; do
             if [ -f "$f" ]; then
@@ -170,33 +170,42 @@ jobs:
           done
           
           total_ext=$(wc -l < external_all.txt)
-          echo "📊 Total external configs collected: $total_ext"
+          echo "📊 تعداد کل کانفیگ‌های خارجی جمع‌آوری شده: $total_ext"
           
           if [ "$total_ext" -eq 0 ]; then
-            echo "⚠️ No external configs found. Creating empty file."
+            echo "⚠️ هیچ کانفیگ خارجی یافت نشد. فایل خالی ساخته می‌شود."
             touch external_best.txt
           else
-            echo "🔄 Testing and selecting the best 2500 configs (by latency) using xray-knife..."
-            # تست واقعی، فیلتر بر اساس حداکثر تاخیر 1000ms، مرتب‌سازی بر اساس کمترین تاخیر، و خروجی حداکثر 2500 کانفیگ برتر
+            echo "🔄 در حال تست و انتخاب 2500 کانفیگ برتر (بر اساس کمترین تاخیر) با xray-knife..."
+            set +e  # غیرفعال کردن exit-on-error برای این بخش
             xray-knife speed -f external_all.txt \
               --test-only \
               --max-latency 1000 \
               --sort-by latency \
-              --limit 2501 \
-              --format plain > external_best.txt 2>/dev/null
-              
-            selected=$(wc -l < external_best.txt)
-            echo "✅ Best $selected external configs selected (sorted by latency, max 2500)"
+              --limit 2500 \
+              --format plain > external_best.txt 2>&1
+            KNIFE_EXIT=$?
+            set -e
+            
+            if [ $KNIFE_EXIT -eq 0 ] && [ -s external_best.txt ]; then
+              selected=$(wc -l < external_best.txt)
+              echo "✅ موفقیت: $selected کانفیگ برتر انتخاب شد (مرتب شده بر اساس تاخیر، حداکثر 2500)"
+            else
+              echo "⚠️ xray-knife با خطا مواجه شد (کد خروج $KNIFE_EXIT). استفاده از روش جایگزین: انتخاب 2500 کانفیگ تصادفی."
+              shuf -n 2500 external_all.txt > external_best.txt
+              selected=$(wc -l < external_best.txt)
+              echo "✅ روش جایگزین: $selected کانفیگ تصادفی انتخاب شد."
+            fi
           fi
 
       # ============================================
-      # مرحله 4: ترکیب کانفیگ‌های شخصی (مرتب شده بر اساس زمان کامیت) + بهترین کانفیگ‌های خارجی
+      # مرحله 4: ترکیب کانفیگ‌های شخصی (مرتب بر اساس زمان کامیت) + بهترین کانفیگ‌های خارجی
       # ============================================
-      - name: Merge personal configs (unlimited, sorted) and best external configs
+      - name: Merge personal configs (sorted) and best external configs
         run: |
           > sub.txt
           
-          # ---------- بخش شخصی (غیر external) ----------
+          # ---------- بخش شخصی (فایل‌هایی که با external_ شروع نمی‌شوند) ----------
           personal_files=()
           for f in configs/*.txt; do
             if [[ ! "$f" =~ external_[0-9]+\.txt$ ]]; then
@@ -205,45 +214,45 @@ jobs:
           done
           
           if [ ${#personal_files[@]} -eq 0 ]; then
-            echo "No personal files found."
+            echo "هیچ فایل شخصی یافت نشد."
           else
-            echo "=== Getting last commit timestamp for personal files ==="
+            echo "=== دریافت زمان آخرین کامیت برای فایل‌های شخصی ==="
             tmp_file=$(mktemp)
             for f in "${personal_files[@]}"; do
               ts=$(git log -1 --format='%ct' -- "$f" 2>/dev/null || echo 0)
               echo "$ts|$f" >> "$tmp_file"
             done
             
-            echo "=== Sorted by timestamp (newest first) ==="
+            echo "=== مرتب‌سازی بر اساس جدیدترین کامیت (اولین) ==="
             sort -t'|' -k1 -rn "$tmp_file" | while IFS='|' read -r ts file; do
-              date_str=$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "unknown")
+              date_str=$(date -d "@$ts" '+%Y-%m-%d %H:%M:%S' 2>/dev/null || echo "نامشخص")
               echo "$ts -> $file ($date_str)"
             done
             echo ""
             
-            echo "=== Adding personal files in sorted order (all, unlimited) ==="
+            echo "=== افزودن فایل‌های شخصی به ترتیب (همه، بدون محدودیت) ==="
             sort -t'|' -k1 -rn "$tmp_file" | cut -d'|' -f2 > sorted_personal.txt
             while IFS= read -r file; do
-              echo "  Adding $file"
+              echo "  اضافه کردن $file"
               grep -E "^(vmess|vless|trojan|ss|ssr|tuic|hysteria2|socks)://" "$file" >> sub.txt 2>/dev/null || true
             done < sorted_personal.txt
           fi
           
           # ---------- اضافه کردن بهترین کانفیگ‌های خارجی ----------
           if [ -s external_best.txt ]; then
-            echo "=== Adding best external configs (tested & filtered) ==="
+            echo "=== افزودن بهترین کانفیگ‌های خارجی ==="
             cat external_best.txt >> sub.txt
-            echo "✅ Added $(wc -l < external_best.txt) best external configs"
+            echo "✅ تعداد کانفیگ‌های خارجی اضافه شده: $(wc -l < external_best.txt)"
           else
-            echo "⚠️ No external best configs to add."
+            echo "⚠️ هیچ کانفیگ خارجی (بهترین) برای اضافه کردن وجود ندارد."
           fi
           
           # ---------- نهایی سازی ----------
           if [ ! -s sub.txt ]; then
-            echo "# No configs found" > sub.txt
+            echo "# هیچ کانفیگی یافت نشد" > sub.txt
           fi
           
-          echo "=== Final total lines in sub.txt: $(wc -l < sub.txt) ==="
+          echo "=== تعداد کل خطوط در sub.txt: $(wc -l < sub.txt) ==="
 
       # ============================================
       # مرحله 5: تبدیل به base64 و commit
@@ -256,14 +265,14 @@ jobs:
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-    
+          
           base64 -w 0 sub.txt > subscribe.txt
-          echo "$(date +'%Y-%m-%d %H:%M:%S UTC') - Cron triggered" > .timestamp
-        
+          date +"%Y-%m-%d %H:%M:%S UTC" > .timestamp
+          
           git add -f subscribe.txt .timestamp
           
           if git diff --cached --quiet; then
-            echo "No changes to commit"
+            echo "تغییری برای commit وجود ندارد"
           else
             git commit -m "Auto update subscription $(date +'%Y-%m-%d %H:%M:%S')"
             git pull --rebase origin main --no-edit || true
