@@ -18,8 +18,6 @@ Merge • Publish • Archive • Automate
 
 <p align="center">
 
-<img src="https://img.shields.io/badge/Version-v5.8.8-blueviolet?style=for-the-badge">
-
 <img src="https://img.shields.io/github/license/amyrmhdyfrhzady/Freedom-Project?style=for-the-badge">
 
 <img src="https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white">
@@ -33,6 +31,8 @@ Merge • Publish • Archive • Automate
 <img src="https://img.shields.io/badge/Node.js-20+-339933?style=for-the-badge&logo=node.js&logoColor=white">
 
 <img src="https://img.shields.io/badge/Playwright-Chromium-2EAD33?style=for-the-badge&logo=playwright&logoColor=white">
+
+<img src="https://img.shields.io/badge/Version-v5.8.8-blueviolet?style=for-the-badge">
 
 </p>
 
@@ -447,6 +447,11 @@ Everything works together.
 - Code cleanup and optimization.
 - Numerous bug fixes and stability enhancements.
 - Long-term maintenance release.
+
+---
+
+## v5.8.8
+- Update README.md File.
 
 ---
 # 🗺 Roadmap
