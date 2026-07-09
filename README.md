@@ -359,6 +359,94 @@ Everything works together.
 </p>
 
 ---
+# 📜 Version History
+
+## v1.0.0
+- Initial release.
+- Added subscription (Sub) link generation.
+
+---
+
+## v1.1.0
+- Added separate configuration files for administrators to manage subscription sources.
+
+## v1.1.1
+- Fixed configuration import order issues.
+
+---
+
+## v1.2.1
+- Added support for external subscription links.
+
+## v1.2.2
+- Fixed various reported bugs and improved overall stability.
+
+---
+
+## v1.3.3
+- Added GitHub Actions cron job for automatic project updates and subscription regeneration.
+- Fixed cron job related issues.
+
+## v1.3.5
+- Reorganized the project structure.
+- Cleaned up source files.
+- Fixed additional reported bugs.
+
+---
+
+## v2.3.5
+- Launched the official Telegram channel.
+- Added an automated Telegram bot for downloading and publishing subscription files.
+
+## v2.4.5
+- Added automatic Telegram delivery using GitHub Actions.
+- Subscription files are now generated, downloaded, and published automatically after every update.
+
+---
+
+# 🚀 Big Update
+
+## v3.4.5
+- Launched the official Bale channel.
+- Developed a fully automated Bale bot for subscription delivery.
+- This update ensures users can still receive configuration files during complete internet disruptions.
+
+## v3.5.6
+- Added usage instructions to all generated files.
+- Improved project reliability and fixed numerous bugs.
+
+---
+
+# 🚀 Massive Update
+
+## v4.5.6
+- Added the News Archive system.
+- Developed an automated crawler that captures trusted news sources as **MHTML** archives.
+- News pages from trusted references such as **Vahid Online**, **Iran International**, and other verified sources are automatically archived and published to the **FREEDOMPROJECT** Bale channel.
+- This feature preserves news pages exactly as they originally appeared.
+
+## v4.5.7
+- Corrected Telegram message timestamps inside archived MHTML files.
+- Improved localization and timezone handling.
+
+## v4.6.7
+- Updated the automation workflow for more reliable scheduled delivery.
+
+## v4.7.7
+- Expanded and refreshed the list of trusted news sources.
+
+---
+
+# 🎉 Final Release
+
+## v5.8.7
+- Final development milestone of **FREEDOMPROJECT**.
+- Performance improvements.
+- Code cleanup and optimization.
+- Numerous bug fixes and stability enhancements.
+- Long-term maintenance release.
+
+---
 # 🗺 Roadmap
 
 The Freedom Project is actively evolving. Planned improvements include:
