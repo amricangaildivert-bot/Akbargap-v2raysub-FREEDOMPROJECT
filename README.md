@@ -38,6 +38,63 @@ Merge • Publish • Archive • Automate
 
 ---
 
+# ⚡ Quick Access
+
+### 📦 Subscription
+
+- 🔗 **Latest Subscription**
+  - https://raw.githubusercontent.com/amyrmhdyfrhzady/FREEDOMPROJECT/refs/heads/main/subscribe.txt
+
+---
+
+### 📢 Official Channels For Giving latest News and v2ray-configs IN Internet blackout
+
+- 💬 **Telegram Channel**
+  - https://t.me/FREEDOMPROJECT
+
+- 🟦 **Bale Channel**
+  - https://ble.ir/join/97M7JLnK3s
+
+---
+
+### 👤 Contact
+
+- **Telegram Admin**
+  - https://t.me/FREEDOMPROJECTADMIN
+
+---
+
+### 📱 MHTML Viewer
+
+- **Google Play**
+  - https://play.google.com/store/apps/details?id=eu.nexomedia.mhtmhtmlviewer
+
+- **Cafe Bazaar**
+  - http://cafebazaar.ir/app/?id=eu.nexomedia.mhtmhtmlviewer&ref=share
+
+- **Myket**
+  - https://myket.ir/app/eu.nexomedia.mhtmhtmlviewer
+
+---
+
+### 📚 Documentation
+
+- ✨ Features → `#features`
+- 🖼️ Screenshots → `#screenshots`
+- 📰 News Archive → `#news-archive`
+- 📜 Changelog → `#changelog`
+- ❤️ Support → `#support`
+- 📄 License → `#license`
+
+---
+
+### 🔗 Source Code
+
+- **Telegram News Downloader**
+  - https://github.com/amyrmhdyfrhzady/telegram-news-mhtml
+
+---
+
 # 🌍 About
 
 Freedom Project is a complete automation ecosystem built to simplify the process of collecting, generating and distributing Subscription files while also archiving important news automatically.
