@@ -18,6 +18,8 @@ Merge • Publish • Archive • Automate
 
 <p align="center">
 
+<img src="https://img.shields.io/badge/Version-v5.8.7-blueviolet?style=for-the-badge">
+
 <img src="https://img.shields.io/github/license/amyrmhdyfrhzady/Freedom-Project?style=for-the-badge">
 
 <img src="https://img.shields.io/badge/Cloudflare-Workers-F38020?style=for-the-badge&logo=cloudflare&logoColor=white">
