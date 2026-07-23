@@ -621,7 +621,7 @@ Downloads **.sub** files and publishes them to a **Telegram** channel.
 
 ---
 
-# 🔥 FeaturesUpdate
+# 🔥 FeatureUpdate
 
 ## 6.0.0
 ### 🌐 filexpelorer
@@ -655,6 +655,8 @@ fileexpelorer
   │
   ▼
 Result Delivered to the User
+
+```
 
 ---
 # 🗺 Roadmap
