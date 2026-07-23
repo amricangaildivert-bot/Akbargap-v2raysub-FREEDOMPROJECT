@@ -393,6 +393,142 @@ Everything works together.
 
 ---
 
+## 🤖 Related Bots
+
+<p align="center">
+
+<img src="https://img.shields.io/badge/Bots-4-5E5CE6?style=for-the-badge" />
+<img src="https://img.shields.io/badge/Bale-3-00C853?style=for-the-badge&logo=googlemessages&logoColor=white" />
+<img src="https://img.shields.io/badge/Telegram-1-229ED9?style=for-the-badge&logo=telegram&logoColor=white" />
+<img src="https://img.shields.io/badge/Automation-Full-FF9800?style=for-the-badge" />
+
+</p>
+
+<p align="center">
+<b>Companion bots that extend the capabilities of this project through automated workflows on Bale and Telegram.</b>
+</p>
+
+---
+
+<table>
+<tr>
+
+<td width="50%" valign="top">
+
+## 📦 SubDownloader
+
+> Automatic subscription delivery for Bale channels.
+
+| | |
+|---|---|
+| **Platform** | 🟢 Bale Messenger |
+| **Purpose** | Download `.sub` files and publish them to a Bale channel |
+| **User-Oriented** | ❌ No |
+| **Operation** | Channel Only |
+| **Status** | 🟢 Online |
+| **Bot** | `@Khdigs8oso7so6r6s_bot` |
+
+</td>
+
+<td width="50%" valign="top">
+
+## 📰 NewsProject
+
+> Archive trusted Telegram news pages and publish them to Bale.
+
+| | |
+|---|---|
+| **Platform** | 🟢 Bale Messenger |
+| **Purpose** | Download pages from trusted Telegram news channels and send them to a Bale channel |
+| **User-Oriented** | ❌ No |
+| **Operation** | Channel Only |
+| **Status** | 🟢 Online |
+| **Bot** | `@Ssfchikbcdyhcf_bot` |
+
+</td>
+
+</tr>
+
+<tr>
+
+<td width="50%" valign="top">
+
+## 📂 FileExplorer
+
+> Download any webpage or file from a user-provided URL.
+
+| | |
+|---|---|
+| **Platform** | 🟢 Bale Messenger |
+| **Purpose** | Download webpages or files from user links and deliver them in private chat |
+| **User-Oriented** | ✅ Yes |
+| **Operation** | Private Chat |
+| **Status** | 🟢 Online |
+| **Bot** | `@Ssfchikbcdyhcf_bot` |
+
+</td>
+
+<td width="50%" valign="top">
+
+## 📡 Sub Downloader
+
+> Telegram edition of the subscription downloader.
+
+| | |
+|---|---|
+| **Platform** | 🔵 Telegram |
+| **Purpose** | Download `.sub` files and publish them to a Telegram channel |
+| **User-Oriented** | ❌ No |
+| **Operation** | Channel Only |
+| **Status** | 🟢 Online |
+| **Bot** | `@AmirSub_downloader_bot` |
+
+</td>
+
+</tr>
+</table>
+
+---
+
+## 📊 Overview
+
+| Bot | Platform | User Interaction | Main Function |
+|:----|:--------:|:----------------:|---------------|
+| 📦 **SubDownloader** | Bale | ❌ | Subscription delivery |
+| 📰 **NewsProject** | Bale | ❌ | News page archiving |
+| 📂 **FileExplorer** | Bale | ✅ | URL downloader |
+| 📡 **Sub Downloader** | Telegram | ❌ | Subscription delivery |
+
+---
+
+<p align="center">
+
+### 🚀 Ecosystem
+
+```text
+                  THIS PROJECT
+                       │
+        ┌──────────────┼──────────────┐
+        │              │              │
+        ▼              ▼              ▼
+📦 SubDownloader   📰 NewsProject   📂 FileExplorer
+        │              │              │
+        └──────────────┼──────────────┘
+                       │
+                       ▼
+                📡 Sub Downloader
+```
+
+</p>
+
+---
+
+> 💡 **Project Ecosystem**
+>
+> These bots are independent services built around this project. Together they automate subscription delivery, news archiving, webpage downloading, and file distribution across Bale and Telegram.
+
+---
+
 # 📊 Project Highlights
 
 | Feature | Status |
